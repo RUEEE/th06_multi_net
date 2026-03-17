@@ -1,3 +1,5 @@
+#include "Connection.hpp"
+
 #include "GameManager.hpp"
 #include "AsciiManager.hpp"
 #include "BulletManager.hpp"
@@ -15,9 +17,20 @@
 #include "Stage.hpp"
 #include "Supervisor.hpp"
 #include "utils.hpp"
+#include "ItemManager.hpp"
 
 #include <d3d8types.h>
 #include <d3dx8math.h>
+
+#include <map>
+extern InGameCtrlType g_cur_ctrl;
+extern std::map<int,Bits<16> > g_ctrl_bits_self;
+extern std::map<int,Bits<16> > g_ctrl_bits_rcved;
+extern std::map<int,int> g_ctrl_rng_rcved;
+extern std::map<int,int> g_ctrl_rng_self;
+extern std::map<int,InGameCtrlType> g_ctrl_rcved;
+extern std::map<int,InGameCtrlType> g_ctrl_self;
+extern InGameCtrlType g_cur_ctrl;
 
 namespace th06
 {
@@ -156,6 +169,45 @@ ChainCallbackResult GameManager::OnUpdate(GameManager *gameManager)
     }
 
     gameManager->isInMenu = isInMenu;
+    
+    if(gameManager->isInGameMenu)
+    {
+        switch(g_cur_ctrl)
+        {
+            default:
+            break;
+            case Quick_Quit:
+                g_Supervisor.curState = SUPERVISOR_STATE_MAINMENU;
+                g_Supervisor.wantedState = SUPERVISOR_STATE_GAMEMANAGER;
+                break;
+            case Quick_Restart:
+                // g_Supervisor.curState = SUPERVISOR_STATE_MAINMENU;
+                // g_Supervisor.wantedState = SUPERVISOR_STATE_GAMEMANAGER;
+                break;
+        }
+        g_cur_ctrl = IGC_NONE;
+    }else{
+        D3DXVECTOR3 p;
+        p.x=(g_Rng.GetRandomF32ZeroToOne()-0.5f)*2.0f*192.0f + 192.0f;
+        p.y=(g_Rng.GetRandomF32ZeroToOne()-0.5f)*2.0f*224.0f + 16.0f;
+        p.z=0.0f;
+        switch(g_cur_ctrl)
+        {
+            default:
+            break;
+            case Inf_Life:
+                g_ItemManager.SpawnItem(&p, ITEM_LIFE,0);
+                break;
+            case Inf_Bomb:
+                g_ItemManager.SpawnItem(&p, ITEM_BOMB,0);
+                break;
+            case Inf_Power:
+                g_ItemManager.SpawnItem(&p, ITEM_FULL_POWER,0);
+                break;
+        }
+        g_cur_ctrl = IGC_NONE;
+    }
+    
 
     g_Supervisor.viewport.X = gameManager->arcadeRegionTopLeftPos.x;
     g_Supervisor.viewport.Y = gameManager->arcadeRegionTopLeftPos.y;
@@ -359,6 +411,7 @@ ZunResult GameManager::AddedCallback(GameManager *mgr)
     mgr->grazeInStage = 0;
     mgr->isInGameMenu = 0;
     mgr->currentStage = mgr->currentStage + 1;
+
     if (g_GameManager.isInReplay == 0)
     {
         clrdIdx = g_GameManager.CharacterShotType();
@@ -400,6 +453,17 @@ ZunResult GameManager::AddedCallback(GameManager *mgr)
         mgr->minRank = g_DifficultyInfoForReplay[g_GameManager.difficulty].minRank;
         mgr->maxRank = g_DifficultyInfoForReplay[g_GameManager.difficulty].maxRank;
     }
+    
+    {
+        //MessageBoxA(NULL,"","",MB_OK);
+        
+        g_Rng.seed = 0;
+        g_ctrl_bits_rcved.clear();
+        g_ctrl_rng_rcved.clear();
+        g_ctrl_rcved.clear();
+        g_cur_ctrl = IGC_NONE;
+    }
+
     g_Rng.generationCount = 0;
     mgr->randomSeed = g_Rng.seed;
     if (Stage::RegisterChain(mgr->currentStage) != ZUN_SUCCESS)

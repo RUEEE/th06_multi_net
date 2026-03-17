@@ -17,32 +17,53 @@ This project aims to make multiplayer from reconstructed source code of [Touhou 
 
 
 ## NetPlay
+# Multiplayer Guide
 
 ### 1. Host Side
-* Click **"as host"** directly.
-* Wait for the guest's response.
+* Simply click **as host**.
+* Wait for the guest to respond.
 
 ### 2. Guest Side
-* Enter the Host's IP address.
-* Click **"as guest"**.
+* Enter the host's IP address.
+* Click **as guest**.
 * Wait for the connection to be established.
 
 ---
 
-### Network & Port Settings
-* **General:** If you are not using NAT traversal (tunneling), you generally don't need to change the host port. If you do, ensure the guest's **host port** matches the host's **listen port**.
-* **NAT Traversal (Tunneling):**
+### Network and Port Settings
+* **Standard Scenario:** If you are not using network tunneling/penetration, you usually don't need to change the **host port**. If you must change it, ensure the guest's **host port** matches the host's **listen port**.
+* **Network Tunneling (Intranet Penetration):** 
     * Select **UDP** as the tunnel type.
-    * **Host:** Set the mapping port in your tunneling software equal to the **listen port**.
-    * **Guest:** Set the **host port** to the external port provided by the tunneling service.
+    * **Host:** In your tunneling software, set the local port to the **listen port**.
+    * **Guest:** Set **host port** to the public port provided by the tunneling service.
     * **Recommendation:** When using tunneling, it is recommended to set **target delay >= 2**, otherwise the game will be very laggy.
+    * Press M or N in-game to increase/decrease the target delay.
 
 ---
 
 ### After Connection
-* The Host can choose whether to be **1P** and set the **target delay**.
-* **Note:** A higher target delay allows the game to handle network latency better, but the input lag will also increase.
-* Click **"start game"** to begin.
+* The host can choose whether to be **1P** and set the **target delay**.
+* **Note:** A higher target delay can better tolerate network latency, but the input lag for controls will also increase.
+* Click **start game** to begin.
+
+---
+
+### Troubleshooting and Additional Notes
+* **Reconnection:** If the connection drops in-game, there is a 5-second timeout. If it doesn't reconnect within this time, you can try returning to the main menu (at the Reimu head screen) to reconnect (though this may not always work).
+* **Background Music:** The game does not include WAV format BGM. Please add it yourself if needed.
+* **Plugins and Testing:** `d3d8.dll` is a d3d8-to-9 conversion plugin. If you wish to use dgVoodoo (dgv), please add it yourself. It is recommended to select **Start Game (local)** to test performance before attempting multiplayer.
+
+---
+
+### 0.35 Updates
+
+- Added Esc+Q shortcut.
+- Pressing F2, F3, or F4 will randomly drop Life/Bomb/Power items on the screen.
+- Cross-version multiplayer is no longer supported.
+- Modified item collection logic; items are now collected by the player closest to them.
+- Removed the frame damage cap and the Full Power item collection mechanism.
+- Config file = `th06e.cfg`.
+- Press M/N to increase/decrease delay.
 
 ---
 

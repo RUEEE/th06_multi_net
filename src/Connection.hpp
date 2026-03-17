@@ -1,5 +1,5 @@
 #pragma once
-
+#define MULTI_NET_VER 3520
 
 #include <winsock2.h>
 #include <Ws2tcpip.h>
@@ -93,9 +93,15 @@ inline void WriteToInt(const Bits<32>& b, unsigned int& i)
 
 enum Control
 {
-    Ctrl_No_Ctrl,Ctrl_Start_Game,Ctrl_Key,Ctrl_Set_InitSetting
+    Ctrl_No_Ctrl,Ctrl_Start_Game,Ctrl_Key,Ctrl_Set_InitSetting,Ctrl_Try_Resync
 };
-#define KeyPackFrameNum 10
+
+enum InGameCtrlType
+{
+    Quick_Quit,Quick_Restart,Inf_Life,Inf_Bomb,Inf_Power,Add_Delay,Dec_Delay,IGC_NONE
+};
+
+#define KeyPackFrameNum 15
 struct CtrlPack
 {
     int frame;
@@ -107,8 +113,14 @@ struct CtrlPack
         {
             bool is_host_p1;
             int delay;
+            int ver;
         }init_setting;
+        struct
+        {
+            int frame_to_re_sync;
+        }resync_setting;
     };
+    InGameCtrlType igc_type[KeyPackFrameNum];
     unsigned short rng_seed[KeyPackFrameNum];
 
     CtrlPack():ctrl_type(Ctrl_No_Ctrl),frame(0){

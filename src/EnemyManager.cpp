@@ -613,10 +613,11 @@ ChainCallbackResult EnemyManager::OnUpdate(EnemyManager *mgr)
                 }
 
                 damage += damage2;
-                if (70 <= damage)
-                {
-                    damage = 70;
-                }
+                // disable damage cap
+                // if (70 <= damage)
+                // {
+                //     damage = 70;
+                // }
                 g_GameManager.score = (damage / 5) * 10 + g_GameManager.score;
                 if (mgr->spellcardInfo.isActive != 0)
                 {

@@ -55,11 +55,11 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
     }
     //g_is_connected = false;
 
-     //if (utils::CheckForRunningGameInstance())
-     //{
-     //    g_GameErrorContext.Flush();
-     //    return 1;
-     //}
+    //if (utils::CheckForRunningGameInstance())
+    //{
+    //    g_GameErrorContext.Flush();
+    //    return 1;
+    //}
 
     g_Supervisor.hInstance = hInstance;
 

@@ -82,6 +82,11 @@ i32 __inline calculatePointScore(Item *curItem, i32 scoreAcquiredItemTop, i32 sc
                : (scoreAcquiredItemBottom - (((i32)curItem->currentPosition.y - 128) * posMultiplier));
 }
 
+float hypotsqf(float a,float b)
+{
+    return a*a+b*b;
+}
+
 #pragma var_order(idx, itemScore, playerAngle, itemAcquired, curItem, fVar5, idx2, iVar8, idx3, iVar9)
 void ItemManager::OnUpdate()
 {
@@ -122,25 +127,41 @@ void ItemManager::OnUpdate()
         }
         else
         {
-            if (curItem->state == 1 || (128 <= g_GameManager.currentPower && g_Player.positionCenter.y < 128.0f))
+            if(curItem->state == 1)
             {
-                playerAngle = g_Player.AngleToPlayer(&curItem->currentPosition);
-                sincosmul(&curItem->startPosition, playerAngle, 8.0f);
-                curItem->state = 1;
-            }
-            else if (curItem->state == 1 || (128 <= g_GameManager.currentPower && g_Player2.positionCenter.y < 128.0f))
-            {
-                playerAngle = g_Player2.AngleToPlayer(&curItem->currentPosition);
-                sincosmul(&curItem->startPosition, playerAngle, 8.0f);
-                curItem->state = 1;
-            }
-            else
-            {
-                curItem->startPosition.x = 0.0;
-                curItem->startPosition.z = 0.0;
-                if (curItem->startPosition.y < -2.2f)
+                float dis1 = hypotsqf(curItem->currentPosition.x-g_Player.positionCenter.x,
+                    curItem->currentPosition.y-g_Player.positionCenter.y);
+
+                float dis2 = hypotsqf(curItem->currentPosition.x-g_Player2.positionCenter.x,
+                    curItem->currentPosition.y-g_Player2.positionCenter.y);
+                if(dis1<dis2)
                 {
-                    curItem->startPosition.y = -2.2f;
+                    playerAngle = g_Player.AngleToPlayer(&curItem->currentPosition);
+                }else{
+                    playerAngle = g_Player2.AngleToPlayer(&curItem->currentPosition);
+                }
+                sincosmul(&curItem->startPosition, playerAngle, 8.0f);
+            }else{
+                if ((0 <= g_GameManager.currentPower && g_Player.positionCenter.y < 128.0f))
+                {
+                    playerAngle = g_Player.AngleToPlayer(&curItem->currentPosition);
+                    sincosmul(&curItem->startPosition, playerAngle, 8.0f);
+                    curItem->state = 1;
+                }
+                else if ((0 <= g_GameManager.currentPower && g_Player2.positionCenter.y < 128.0f))
+                {
+                    playerAngle = g_Player2.AngleToPlayer(&curItem->currentPosition);
+                    sincosmul(&curItem->startPosition, playerAngle, 8.0f);
+                    curItem->state = 1;
+                }
+                else
+                {
+                    curItem->startPosition.x = 0.0;
+                    curItem->startPosition.z = 0.0;
+                    if (curItem->startPosition.y < -2.2f)
+                    {
+                        curItem->startPosition.y = -2.2f;
+                    }
                 }
             }
         }

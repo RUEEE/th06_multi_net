@@ -106,12 +106,21 @@ ChainCallbackResult MainMenu::OnUpdate(MainMenu *menu)
             return CHAIN_CALLBACK_RESULT_CONTINUE_AND_REMOVE_JOB;
         }
     case STATE_PRE_INPUT:
+        {
+            if(!g_is_connected)
+            {
+                menu->cursor=0;
+                g_istry_to_reconnect = true;
+            }else{
+                g_istry_to_reconnect = false;
+            }
+        }
         menu->idleFrames = menu->idleFrames + 1;
         if ((g_CurFrameInput & 0xffff) != 0)
         {
             menu->idleFrames = 0;
         }
-        if (720 <= menu->idleFrames)
+        if (2147483640 <= menu->idleFrames)
         {
             goto load_menu_rpy;
         }
@@ -119,14 +128,6 @@ ChainCallbackResult MainMenu::OnUpdate(MainMenu *menu)
             break;
         menu->idleFrames = 0;
     case STATE_MAIN_MENU:
-        {
-            if(menu->cursor==0 && !g_is_connected)
-            {
-                g_istry_to_reconnect = true;
-            }else{
-                g_istry_to_reconnect = false;
-            }
-        }
         menu->DrawStartMenu();
         if ((g_CurFrameInput & 0xffff) != 0)
         {

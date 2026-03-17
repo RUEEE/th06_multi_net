@@ -79,8 +79,8 @@ private:
     void ProcessGuestNetwork();
 
     void TryPeriodicPing();
-    void SendPingAsHost(CtrlPack ctrl);
-    void SendPingAsGuest(CtrlPack ctrl);
+    void SendPingAsHost(Control ctrl);
+    void SendPingAsGuest(Control ctrl);
 
     void EnterHostWaitingState();
     void EnterGuestWaitingState();

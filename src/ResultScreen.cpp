@@ -303,6 +303,16 @@ ZunResult ResultScreen::ParseClrd(ScoreDat *scoreDat, Clrd *outClrd)
         cursor -= parsedClrd->base.th6kLen;
         parsedClrd = (Clrd *)((i32)&parsedClrd->base + parsedClrd->base.th6kLen);
     }
+
+    // unlock all prac
+    for (characterShotType = 0; characterShotType < CLRD_NUM_CHARACTERS; characterShotType++)
+    {
+        for (difficulty = 0; difficulty < ARRAY_SIZE_SIGNED(outClrd[0].difficultyClearedWithoutRetries); difficulty++)
+        {
+            outClrd[characterShotType].difficultyClearedWithRetries[difficulty] = 99;
+            outClrd[characterShotType].difficultyClearedWithoutRetries[difficulty] = 99;
+        }
+    }
     return ZUN_SUCCESS;
 }
 #pragma intrinsic(memset)

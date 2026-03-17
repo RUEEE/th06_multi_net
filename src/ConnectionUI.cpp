@@ -14,9 +14,13 @@
 #define IDC_BTN_START_GAME_LOCAL 1010
 
 #define TIMER_ID_POLL            1
-#define TIMER_INTERVAL_MS        50
+#define TIMER_INTERVAL_MS        15
+
+#define max_delay 10
+#define max_delay_s "10"
 
 
+bool is_ver_matched = true;
 ULONGLONG MyGetTickCount()
 {
     LARGE_INTEGER l;
@@ -70,13 +74,13 @@ bool ConnectionUI::GetIsHostP1()
 void ConnectionUI::SetDelay(int delay)
 {
     m_delay = delay;
-    if(m_delay <= 0)
+    if(m_delay < 0)
     {
-        m_delay = 1;
+        m_delay = 0;
     }
-    if(m_delay > 60)
+    if(m_delay > max_delay)
     {
-        m_delay = 60;
+        m_delay = max_delay;
     }
     char chs[60];
     sprintf(chs,"%d",m_delay);
@@ -255,15 +259,15 @@ void ConnectionUI::CreateControls(HWND hWnd)
         220, 340, 180, 36, hWnd, (HMENU)IDC_BTN_START_GAME_LOCAL, NULL, NULL);
 
     m_delay = atoi(target_delay);
-    if(m_delay<=0)
+    if(m_delay<0)
     {
-        m_delay=1;
-        SetWindowTextA(m_editTargetLatency,"1");
+        m_delay=0;
+        SetWindowTextA(m_editTargetLatency,"0");
     }
-    if(m_delay>60)
+    if(m_delay>max_delay)
     {
-        m_delay=60;
-        SetWindowTextA(m_editTargetLatency,"60");
+        m_delay=max_delay;
+        SetWindowTextA(m_editTargetLatency,max_delay_s);
     };
 
     m_is_host_p1 = is_host_p1;
@@ -344,10 +348,16 @@ void ConnectionUI::ResetGuestButtonAfterTimeout()
     m_connected = false;
 }
 
-void ConnectionUI::SendPingAsHost(CtrlPack pctrl)
+void ConnectionUI::SendPingAsHost(Control ctrl)
 {
+    CtrlPack cp;
+    cp.ctrl_type = ctrl;
+    cp.init_setting.delay = GetDelay();
+    cp.init_setting.is_host_p1 = GetIsHostP1();
+    cp.init_setting.ver = MULTI_NET_VER;
+
     Pack p;
-    p.ctrl = pctrl;
+    p.ctrl = cp;
     p.type = PACK_PING;
     p.seq = m_seq++;
     p.sendTick = MyGetTickCount();
@@ -356,15 +366,21 @@ void ConnectionUI::SendPingAsHost(CtrlPack pctrl)
     m_host.SendPack(p);
 }
 
-void ConnectionUI::SendPingAsGuest(CtrlPack pctrl)
+void ConnectionUI::SendPingAsGuest(Control ctrl)
 {
+    CtrlPack cp;
+    cp.ctrl_type = ctrl;
+    cp.init_setting.delay = GetDelay();
+    cp.init_setting.is_host_p1 = GetIsHostP1();
+    cp.init_setting.ver = MULTI_NET_VER;
+
     Pack p;
-    p.ctrl = pctrl;
+    p.ctrl = cp;
     p.type = PACK_PING;
     p.seq = m_seq++;
     p.sendTick = MyGetTickCount();
     p.echoTick = 0;
-
+    
     m_guest.SendPack(p);
 }
 
@@ -378,14 +394,12 @@ void ConnectionUI::TryPeriodicPing()
     {
         if (m_isHost)
         {
-            CtrlPack c;
-            c.ctrl_type = Ctrl_Set_InitSetting;
-            c.init_setting.delay = GetDelay();
-            c.init_setting.is_host_p1 = GetIsHostP1();
-            SendPingAsHost(c);
+            SendPingAsHost(Ctrl_Set_InitSetting);
         }
         else if (m_isGuest)
-            SendPingAsGuest(CtrlPack());
+        {
+            SendPingAsGuest(Ctrl_Set_InitSetting);
+        }
 
         m_lastPeriodicPingTick = now;
     }
@@ -393,6 +407,7 @@ void ConnectionUI::TryPeriodicPing()
 
 void ConnectionUI::OnClickHost()
 {
+    is_ver_matched = true;
     int listenPort = GetEditInt(m_editListenPort);
     if(listenPort==-1)
         return;
@@ -407,6 +422,7 @@ void ConnectionUI::OnClickHost()
 
 void ConnectionUI::OnClickGuest()
 {
+    is_ver_matched = true;
     std::string hostIp = GetEditText(m_editHostIp);
     int hostPort = GetEditInt(m_editHostPort);
     int listenPort = GetEditInt(m_editListenPort);
@@ -425,7 +441,7 @@ void ConnectionUI::OnClickGuest()
     EnterGuestWaitingState();
 
     // ping
-    SendPingAsGuest(CtrlPack());
+    SendPingAsGuest(Ctrl_Set_InitSetting);
 }
 
 void ConnectionUI::OnClickStartGame()
@@ -433,14 +449,10 @@ void ConnectionUI::OnClickStartGame()
     if (!m_connected)
         return;
     m_startGame = true;
-    CtrlPack p;
-    p.ctrl_type = Ctrl_Start_Game;
-    p.init_setting.delay = GetDelay();
-    p.init_setting.is_host_p1 = GetIsHostP1();
     if(this->IsHost())
-        SendPingAsHost(p);
+        SendPingAsHost(Ctrl_Start_Game);
     else
-        SendPingAsGuest(p);
+        SendPingAsGuest(Ctrl_Start_Game);
     return;
     
     // DestroyWindow(m_hWnd);
@@ -448,6 +460,8 @@ void ConnectionUI::OnClickStartGame()
 
 void ConnectionUI::ProcessHostNetwork()
 {
+    if(!is_ver_matched)
+        return;
     while (true)
     {
         Pack p;
@@ -459,18 +473,21 @@ void ConnectionUI::ProcessHostNetwork()
         if (!hasData)
             break;
 
+        if(p.ctrl.ctrl_type == Ctrl_Set_InitSetting && p.ctrl.init_setting.ver != MULTI_NET_VER)
+            is_ver_matched = false;
+
         // host pong
         if (p.type == PACK_PING)
         {
+            
             Pack reply;
             reply.type = PACK_PONG;
             reply.seq = p.seq;
             reply.sendTick = p.sendTick;           // cal RTT
             reply.echoTick = MyGetTickCount();
             reply.ctrl = p.ctrl;
-
+            reply.ctrl.init_setting.ver = MULTI_NET_VER;
             m_host.SendPack(reply);
-
             if (!m_connected)
                 EnterConnectedState();
             if(p.ctrl.ctrl_type==Ctrl_Start_Game)
@@ -493,13 +510,30 @@ void ConnectionUI::ProcessHostNetwork()
                 DestroyWindow(m_hWnd);
             }
         }
+
+        if(!is_ver_matched)
+        {
+            MessageBoxA(NULL,"not matched guest/host version","warning",MB_OK | MB_ICONWARNING);
+            m_host.Reset();
+            m_isHost = false;
+            m_isGuest = false;
+            m_connected = false;
+            m_lastPeriodicPingTick = 0;
+
+            EnableWindow(m_btnGuest, TRUE);
+            SetText(m_btnHost, "as host");
+            SetLatencyText("no connection");
+            EnableWindow(m_btnStartGame, FALSE);
+            return;
+        }
     }
 }
 
 void ConnectionUI::ProcessGuestNetwork()
 {
     bool gotAnyData = false;
-
+    if(!is_ver_matched)
+        return;
     while (true)
     {
         Pack p;
@@ -512,6 +546,9 @@ void ConnectionUI::ProcessGuestNetwork()
             break;
 
         gotAnyData = true;
+        
+        if(p.ctrl.ctrl_type == Ctrl_Set_InitSetting && p.ctrl.init_setting.ver != MULTI_NET_VER)
+            is_ver_matched = false;
 
         // guest rcv ping
         if (p.type == PACK_PING)
@@ -522,7 +559,7 @@ void ConnectionUI::ProcessGuestNetwork()
             reply.sendTick = p.sendTick;
             reply.echoTick = MyGetTickCount();
             reply.ctrl = p.ctrl;
-
+            reply.ctrl.init_setting.ver = MULTI_NET_VER;
             m_guest.SendPack(reply);
 
             if (!m_connected)
@@ -564,6 +601,21 @@ void ConnectionUI::ProcessGuestNetwork()
             ResetGuestButtonAfterTimeout();
             MessageBoxA(m_hWnd, "no connection", "warning", MB_OK | MB_ICONWARNING);
         }
+    }else if(!is_ver_matched)
+    {
+        MessageBoxA(NULL,"not matched guest/host version","warning",MB_OK | MB_ICONWARNING);
+        m_guest.Reset();
+        m_isHost = false;
+        m_isGuest = false;
+        m_connected = false;
+        m_lastPeriodicPingTick = 0;
+        m_guestWaitStartTick = 0;
+
+        EnableWindow(m_btnHost, TRUE);
+        SetText(m_btnGuest, "as guest");
+        SetLatencyText("no connection");
+        EnableWindow(m_btnStartGame, FALSE);
+        return;
     }
 }
 
@@ -643,21 +695,20 @@ LRESULT ConnectionUI::HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM l
                     char buf[32];
                     GetWindowTextA(m_editTargetLatency, buf, 16);
                     m_delay = atoi(buf);
-                    if(m_delay<=0)
+                    if(m_delay<0)
                     {
-                        m_delay=1;
-                        SetWindowTextA(m_editTargetLatency,"1");
+                        m_delay=0;
+                        SetWindowTextA(m_editTargetLatency,"0");
                     }
-                    if(m_delay>60)
+                    if(m_delay>max_delay)
                     {
-                        m_delay=60;
-                        SetWindowTextA(m_editTargetLatency,"60");
+                        m_delay=max_delay;
+                        SetWindowTextA(m_editTargetLatency,max_delay_s);
                         SendMessage((HWND)lParam, EM_SETSEL, 2, 2);
                     }
                     if(IsHost())
                         TryPeriodicPing();
                 }
-                
                 break;
         case IDC_CHECKBOX_IS_HOST_1P:
         {

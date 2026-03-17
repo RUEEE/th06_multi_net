@@ -19,6 +19,7 @@
 #include "i18n.hpp"
 #include "inttypes.hpp"
 #include "utils.hpp"
+#include "Gui.hpp"
 
 #include <stdio.h>
 #include <string.h>
@@ -27,6 +28,9 @@ extern std::map<int,Bits<16> > g_ctrl_bits_self;
 extern std::map<int,Bits<16> > g_ctrl_bits_rcved;
 extern std::map<int,int> g_ctrl_rng_rcved;
 extern std::map<int,int> g_ctrl_rng_self;
+extern std::map<int,InGameCtrlType> g_ctrl_rcved;
+extern std::map<int,InGameCtrlType> g_ctrl_self;
+InGameCtrlType g_cur_ctrl = IGC_NONE;
 
 extern bool g_is_connected;
 extern bool g_is_sync;
@@ -37,6 +41,13 @@ extern int g_delay;
 extern bool g_is_host;
 extern bool g_is_host_p1;
 extern bool g_is_single_mode;
+
+
+bool g_resync_trigger = false;
+int g_resync_stage_frame = 0;
+
+
+int g_change_delay_cd = 40;
 
 namespace th06
 {
@@ -50,7 +61,29 @@ DIFFABLE_STATIC(u16, g_NumOfFramesInputsWereHeld);
 
 ChainCallbackResult Supervisor::OnUpdate(Supervisor *s)
 {
+    static last_frame_a = 0;
+    bool is_in_UI = (s->curState != SUPERVISOR_STATE_GAMEMANAGER) || (s->curState == SUPERVISOR_STATE_GAMEMANAGER && g_GameManager.isInGameMenu);
+    int frame_a = s->calcCount;
+    if(last_frame_a > frame_a) {
+        frame_a = s->calcCount = 0;
+        g_ctrl_bits_rcved.clear();
+        g_ctrl_rng_rcved.clear();
+        g_ctrl_rcved.clear();
+        // g_ctrl_bits_self.clear();
+        // g_ctrl_rng_self.clear();
+        // g_ctrl_self.clear();
+        g_cur_ctrl = IGC_NONE;
+    }
+    last_frame_a = frame_a;
 
+    // if(s->calcCount % 300 == 299)
+    // {
+    //     LARGE_INTEGER q;
+    //     QueryPerformanceCounter(&q);
+    //     g_Rng.seed = q.QuadPart%65535;
+    // }
+
+    g_cur_ctrl = IGC_NONE;
     if (g_SoundPlayer.backgroundMusic != NULL)
     {
         g_SoundPlayer.backgroundMusic->UpdateFadeOut();
@@ -61,32 +94,114 @@ ChainCallbackResult Supervisor::OnUpdate(Supervisor *s)
     {
         g_CurFrameInput = Controller::GetInput();
     }else{
+        if(g_is_connected && !g_is_sync)
+        {
+            if(g_resync_trigger == true)
+            {
+                if(g_resync_stage_frame <= s->calcCount){
+                    g_resync_trigger = false;
+                    Controller::RcvPacks();
+                    g_Rng.seed = 0;
+                    // s->calcCount = 0;
+                    // frame_a = s->calcCount;
+                    g_ctrl_bits_rcved.clear();
+                    g_ctrl_rng_rcved.clear();
+                    g_ctrl_rcved.clear();
+                    g_cur_ctrl = IGC_NONE;
+                    
+                    g_is_sync = true;
+                }
+            }
+            if(g_is_host && !g_is_sync) {
+                if(g_resync_trigger == false)
+                {
+                    g_resync_stage_frame = s->calcCount + g_delay*2 + 2;
+                    if(g_resync_stage_frame > g_delay*2 + 2)
+                    {
+                        g_resync_trigger = true;
+                    }
+                }
+                if(g_resync_trigger)
+                {
+                    Pack pack;
+                    pack.echoTick = 0;
+                    pack.sendTick = 0;
+                    pack.seq = 0;
+                    pack.type = 4;
+                    
+                    pack.ctrl.ctrl_type = Ctrl_Try_Resync;
+                    pack.ctrl.resync_setting.frame_to_re_sync = g_resync_stage_frame;
+                    g_host.SendPack(pack);
+                }
+            }
+        }
+        int cur_ctrl_i;
+        if(g_Supervisor.curState != SUPERVISOR_STATE_RESULTSCREEN)
+        {
+            g_CurFrameInput = Controller::GetInput_Net(frame_a, is_in_UI,cur_ctrl_i);
+        }else{
+            g_CurFrameInput = 0;
+        }
+        g_cur_ctrl = (InGameCtrlType)cur_ctrl_i;
+        g_change_delay_cd--;
+        if(g_change_delay_cd<0)
+            g_change_delay_cd=0;
+        switch(g_cur_ctrl)
+        {
+            default:
+            break;
+            case Add_Delay:
+                if(g_change_delay_cd==0)
+                {
+                    g_change_delay_cd = 40;
+                    g_delay++;
+                    if(g_delay>=10)
+                        g_delay=10;
+                    break;
+                }
+            case Dec_Delay:
+                if(g_change_delay_cd==0)
+                {
+                    g_change_delay_cd = 40;
+                    g_delay--;
+                    if(g_delay<0)
+                        g_delay=0;    
+                    break;
+                }
+        }
+        
         D3DXVECTOR3 pos;
         pos.x=0;
         pos.y=0;
         pos.z=0;
         if(g_istry_to_reconnect)  {
-            g_AsciiManager.AddFormatText(&pos, "try to reconnect...");
-            Controller::SendKeys(s->calcCount);
+            g_CurFrameInput = 0;
+            g_AsciiManager.AddFormatText(&pos, "try to reconnect...(%s)",g_is_sync?"sync":"desynced");
+            Controller::SendKeys(frame_a);
             if(Controller::RcvPacks())
             {
                 g_Rng.seed = 0;
                 g_is_connected = true;
                 g_istry_to_reconnect = false;
-                s->calcCount = 0;
-                g_ctrl_bits_self.clear();
                 g_ctrl_bits_rcved.clear();
                 g_ctrl_rng_rcved.clear();
-                g_ctrl_rng_self.clear();
+                g_ctrl_rcved.clear();
+                g_cur_ctrl = IGC_NONE;
             }
         }else{
-            g_AsciiManager.AddFormatText(&pos, "%s %s(%d)",g_is_connected?"connected":"disconnected",g_is_sync?"sync":"desynced",s->calcCount);
+            g_AsciiManager.AddFormatText(&pos, "%s: %s %s(%d/%d);[%d,%d]",
+                g_is_host?"H":"G",
+                g_is_connected?"connected":"disconnected",
+                g_is_sync?"sync":"desynced",
+                s->calcCount,
+                g_GameManager.gameFrames,g_resync_stage_frame,g_resync_trigger?1:0
+            );
         }
-
-        bool is_in_UI = (s->curState != SUPERVISOR_STATE_GAMEMANAGER);
-        g_CurFrameInput = Controller::GetInput_Net(s->calcCount, is_in_UI);
+        pos.x=500;
+        pos.y=440;
+        pos.z=0;
+        g_AsciiManager.AddFormatText(&pos, "delay: %d",g_delay);
     }
-   
 
     g_IsEigthFrameOfHeldInput = 0;
     if (g_LastFrameInput == g_CurFrameInput)
@@ -111,11 +226,13 @@ ChainCallbackResult Supervisor::OnUpdate(Supervisor *s)
 
     if (s->wantedState != s->curState)
     {
-        s->calcCount = 0;
-        g_ctrl_bits_self.clear();
         g_ctrl_bits_rcved.clear();
         g_ctrl_rng_rcved.clear();
-        g_ctrl_rng_self.clear();
+        g_ctrl_rcved.clear();
+
+        // g_ctrl_bits_self.clear();
+        // g_ctrl_rng_self.clear();
+        // g_ctrl_self.clear();
 
         s->wantedState2 = s->wantedState;
         switch (s->wantedState)
@@ -742,13 +859,18 @@ ZunResult Supervisor::LoadConfig(char *path)
             g_Supervisor.cfg.opts |= (1 << GCOS_USE_D3D_HW_TEXTURE_BLENDING);
             g_GameErrorContext.Log(TH_ERR_CONFIG_CORRUPTED);
         }
-        g_Supervisor.cfg.lifeCount = 2;
-        g_Supervisor.cfg.bombCount = 3;
-        g_Supervisor.cfg.frameskipConfig = 0;
-        // force 2-3
+        
         g_ControllerMapping = g_Supervisor.cfg.controllerMapping;
         free(data);
     }
+    this->cfg.lifeCount = 3;
+    this->cfg.bombCount = 3;
+    this->cfg.frameskipConfig = 0;
+    this->cfg.defaultDifficulty = 1;
+    this->cfg.opts |= (1 << GCOS_CLEAR_BACKBUFFER_ON_REFRESH);
+    //this->cfg.opts |= (1 << GCOS_DISPLAY_MINIMUM_GRAPHICS);
+    // force cfg
+
     if (((this->cfg.opts >> GCOS_DONT_USE_VERTEX_BUF) & 1) != 0)
     {
         g_GameErrorContext.Log(TH_ERR_NO_VERTEX_BUFFER);
