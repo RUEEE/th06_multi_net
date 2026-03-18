@@ -22,6 +22,11 @@
 #include "utils.hpp"
 bool g_istry_to_reconnect = false;
 extern bool g_is_connected;
+extern bool g_restart_flag;
+extern bool g_is_host;
+
+int g_last_in_practice_mode_stage = -1;
+
 namespace th06
 {
 DIFFABLE_STATIC_ARRAY_ASSIGN(char *, 4, g_ShortCharacterList) = {"ReimuA ", "ReimuB ", "MarisaA", "MarisaB"};
@@ -65,15 +70,24 @@ ChainCallbackResult MainMenu::OnUpdate(MainMenu *menu)
     AnmVm *vm;
     u32 hasLoadedSprite;
 
+    static LARGE_INTEGER begin,freq,cur;
+    static bool is_inited = false;
+
     if (menu->timeRelatedArrSize < ARRAY_SIZE_SIGNED(menu->timeRelatedArr))
     {
-        timeBeginPeriod(1);
-        if (menu->lastFrameTime == 0)
+        //timeBeginPeriod(1);
+        if (menu->lastFrameTime == 0 || !is_inited)
         {
-            menu->lastFrameTime = timeGetTime();
+            is_inited = true;
+            QueryPerformanceFrequency(&freq);
+            QueryPerformanceCounter(&begin);
+            QueryPerformanceCounter(&cur);
+            menu->lastFrameTime = ((double)(cur.QuadPart - begin.QuadPart))/(freq.QuadPart) * 1000.0; // ms
         }
-        time = timeGetTime();
-        timeEndPeriod(1);
+        QueryPerformanceCounter(&cur);
+        time = ((double)(cur.QuadPart - begin.QuadPart))/(freq.QuadPart) * 1000.0; // ms
+        // time = timeGetTime();
+        // timeEndPeriod(1);
         menu->frameCountForRefreshRateCalc = menu->frameCountForRefreshRateCalc + 1;
         deltaTime = time - menu->lastFrameTime;
         if (deltaTime >= 700)
@@ -97,6 +111,27 @@ ChainCallbackResult MainMenu::OnUpdate(MainMenu *menu)
             }
         }
     }
+    
+        
+    if(g_restart_flag)
+    {
+        g_restart_flag = false;
+        if (g_last_in_practice_mode_stage == -1) {
+            g_GameManager.isInPracticeMode = false;
+            if (g_GameManager.difficulty < 4)
+            {
+                g_GameManager.currentStage = 0;
+            } else {
+                g_GameManager.currentStage = 6;
+            }
+        }else{
+            g_GameManager.isInPracticeMode = true;
+            g_GameManager.currentStage = g_GameManager.menuCursorBackup;
+        }
+        goto something;
+    }
+
+
     switch (menu->gameState)
     {
     case STATE_STARTUP:
@@ -970,13 +1005,20 @@ ChainCallbackResult MainMenu::OnUpdate(MainMenu *menu)
                 } else {
                     g_GameManager.currentStage = 6;
                 }
+                g_last_in_practice_mode_stage = -1;
             something:
+                
                 g_GameManager.livesRemaining = g_Supervisor.cfg.lifeCount;
                 g_GameManager.bombsRemaining = g_Supervisor.cfg.bombCount;
-                if ((g_GameManager.difficulty == EXTRA) || (g_GameManager.isInPracticeMode != 0))
+                if (g_GameManager.difficulty == EXTRA)
                 {
                     g_GameManager.livesRemaining = 2;
                     g_GameManager.bombsRemaining = 3;
+                }
+                if(g_GameManager.isInPracticeMode)
+                {
+                    g_GameManager.livesRemaining = 8;
+                    g_GameManager.bombsRemaining = 8;
                 }
                 g_Supervisor.curState = 2;
                 g_SoundPlayer.PlaySoundByIdx(SOUND_SELECT, 0);
@@ -1015,6 +1057,7 @@ ChainCallbackResult MainMenu::OnUpdate(MainMenu *menu)
                     refreshRate = 60.0f / 70.0f;
                 else
                     refreshRate = 1.0;
+                refreshRate = 1.0;
                 utils::DebugPrint("Reflesh Rate = %f\n", 60.0f / refreshRate);
                 g_Supervisor.framerateMultiplier = refreshRate;
                 g_Supervisor.StopAudio();
@@ -1064,16 +1107,6 @@ ChainCallbackResult MainMenu::OnUpdate(MainMenu *menu)
         break;
 
 
-
-
-
-
-
-
-
-
-
-
     case STATE_PRACTICE_LVL_SELECT:
         chosenStage = g_GameManager.clrd[g_GameManager.CharacterShotType()]
                                   .difficultyClearedWithoutRetries[g_GameManager.difficulty] > 6
@@ -1115,6 +1148,7 @@ ChainCallbackResult MainMenu::OnUpdate(MainMenu *menu)
         {
             g_GameManager.currentStage = menu->cursor;
             g_GameManager.menuCursorBackup = menu->cursor;
+            g_last_in_practice_mode_stage = g_GameManager.currentStage;
             goto something;
         }
         break;

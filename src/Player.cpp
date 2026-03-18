@@ -1233,7 +1233,7 @@ ZunResult Player::UpdateFireBulletsTimer(Player *p)
     }
     else
     {
-        if (p->fireBulletTimer.HasTicked() && (!g_Player.bombInfo.isInUse || g_GameManager.character2 != CHARA_MARISA ||
+        if (p->fireBulletTimer.HasTicked() && (!g_Player2.bombInfo.isInUse || g_GameManager.character2 != CHARA_MARISA ||
                                                g_GameManager.shotType2 != SHOT_TYPE_B))
         {
             p->SpawnBullets(p, p->fireBulletTimer.AsFrames());

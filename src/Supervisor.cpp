@@ -41,7 +41,7 @@ extern int g_delay;
 extern bool g_is_host;
 extern bool g_is_host_p1;
 extern bool g_is_single_mode;
-
+extern bool g_restart_flag;
 
 bool g_resync_trigger = false;
 int g_resync_stage_frame = 0;
@@ -863,7 +863,7 @@ ZunResult Supervisor::LoadConfig(char *path)
         g_ControllerMapping = g_Supervisor.cfg.controllerMapping;
         free(data);
     }
-    this->cfg.lifeCount = 3;
+    this->cfg.lifeCount = 2;
     this->cfg.bombCount = 3;
     this->cfg.frameskipConfig = 0;
     this->cfg.defaultDifficulty = 1;

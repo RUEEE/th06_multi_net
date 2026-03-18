@@ -351,6 +351,8 @@ i32 GameWindow::InitD3dRendering(void)
         {
             present_params.BackBufferFormat = D3DFMT_R5G6B5;
         }
+
+       
         if (!((g_Supervisor.cfg.opts >> GCOS_FORCE_60FPS) & 1))
         {
             present_params.FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_ONE;
@@ -361,6 +363,10 @@ i32 GameWindow::InitD3dRendering(void)
             present_params.FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_ONE;
             g_GameErrorContext.Log(TH_ERR_SET_REFRESH_RATE_60HZ);
         }
+        // disable vsync
+        present_params.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
+        present_params.FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
+
         if (g_Supervisor.cfg.frameskipConfig == 0)
         {
             present_params.SwapEffect = D3DSWAPEFFECT_FLIP;

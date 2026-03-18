@@ -32,6 +32,8 @@ extern std::map<int,InGameCtrlType> g_ctrl_rcved;
 extern std::map<int,InGameCtrlType> g_ctrl_self;
 extern InGameCtrlType g_cur_ctrl;
 
+bool g_restart_flag = false;
+
 namespace th06
 {
 
@@ -178,11 +180,12 @@ ChainCallbackResult GameManager::OnUpdate(GameManager *gameManager)
             break;
             case Quick_Quit:
                 g_Supervisor.curState = SUPERVISOR_STATE_MAINMENU;
-                g_Supervisor.wantedState = SUPERVISOR_STATE_GAMEMANAGER;
+                //g_Supervisor.wantedState = SUPERVISOR_STATE_GAMEMANAGER;
                 break;
             case Quick_Restart:
-                // g_Supervisor.curState = SUPERVISOR_STATE_MAINMENU;
-                // g_Supervisor.wantedState = SUPERVISOR_STATE_GAMEMANAGER;
+                g_Supervisor.curState = SUPERVISOR_STATE_MAINMENU;
+                //g_Supervisor.wantedState = SUPERVISOR_STATE_GAMEMANAGER;
+                g_restart_flag = true;
                 break;
         }
         g_cur_ctrl = IGC_NONE;
