@@ -37,7 +37,20 @@ bool g_restart_flag = false;
 namespace th06
 {
 
-DIFFABLE_STATIC_ARRAY_ASSIGN(u32, 5, g_ExtraLivesScores) = {10000000, 20000000, 40000000, 60000000, 1900000000};
+DIFFABLE_STATIC_ARRAY_ASSIGN(u32, 13, g_ExtraLivesScores) = {
+    10000000, 
+    20000000, 
+    30000000, 
+    40000000, 
+    50000000, 
+    60000000, 
+    80000000, 
+   100000000, 
+   125000000,
+   150000000,
+   200000000,
+   250000000,
+  1900000000};
 
 DIFFABLE_STATIC_ARRAY_ASSIGN(char *, 9, g_EclFiles) = {"dummy",
                                                        "data/ecldata1.ecl",
@@ -269,11 +282,14 @@ ChainCallbackResult GameManager::OnUpdate(GameManager *gameManager)
         }
         if (gameManager->extraLives >= 0 && g_ExtraLivesScores[gameManager->extraLives] <= gameManager->guiScore)
         {
-            if (gameManager->livesRemaining < MAX_LIVES)
-            {
-                gameManager->livesRemaining++;
+            if (gameManager->livesRemaining < MAX_LIVES || gameManager->livesRemaining2 < MAX_LIVES) {
                 g_SoundPlayer.PlaySoundByIdx(SOUND_1UP, 0);
             }
+            if (gameManager->livesRemaining < MAX_LIVES)
+                gameManager->livesRemaining++;
+            if (gameManager->livesRemaining2 < MAX_LIVES)
+                gameManager->livesRemaining2++;
+
             g_Gui.flags.flag0 = 2;
             gameManager->extraLives++;
             g_GameManager.IncreaseSubrank(200);
@@ -338,6 +354,7 @@ ZunResult GameManager::AddedCallback(GameManager *mgr)
     {
         g_Supervisor.defaultConfig.bombCount = g_GameManager.bombsRemaining;
         g_Supervisor.defaultConfig.lifeCount = g_GameManager.livesRemaining;
+        
         mgr->arcadeRegionTopLeftPos.x = 32.0;
         mgr->arcadeRegionTopLeftPos.y = 16.0;
         mgr->arcadeRegionSize.x = 384.0;
@@ -352,6 +369,7 @@ ZunResult GameManager::AddedCallback(GameManager *mgr)
         mgr->nextScoreIncrement = 0;
         mgr->highScore = 100000;
         mgr->currentPower = 0;
+        mgr->currentPower2 = 0;
         mgr->numRetries = 0;
         if (6 <= mgr->currentStage)
         {
@@ -436,9 +454,11 @@ ZunResult GameManager::AddedCallback(GameManager *mgr)
             break;
         case STAGE3:
             mgr->currentPower = 64;
+            mgr->currentPower2 = 64;
             break;
         default:
             mgr->currentPower = 128;
+            mgr->currentPower2 = 128;
         }
     }
     g_Supervisor.LoadPbg3(CM_PBG3_INDEX, TH_CM_DAT_FILE);

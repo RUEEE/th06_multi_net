@@ -166,6 +166,9 @@ void EnemyManager::RunEclTimeline()
         // number of lives lost?
         subrankIncreaseFrame = 10 * 4 * 60;
         subrankIncreaseFrame -= g_GameManager.livesRemaining * 4 * 60;
+        subrankIncreaseFrame -= g_GameManager.livesRemaining2 * 4 * 60;
+        if(subrankIncreaseFrame<=0)
+            subrankIncreaseFrame=1;
         if (this->timelineTime.HasTicked() && this->timelineTime.AsFrames() % subrankIncreaseFrame == 0)
         {
             g_GameManager.IncreaseSubrank(100);
@@ -314,6 +317,7 @@ void EnemyManager::RunEclTimeline()
                 break;
             case 0xb:
                 g_GameManager.currentPower = this->timelineInstr->arg0;
+                g_GameManager.currentPower2 = this->timelineInstr->arg0;
                 break;
             case 0xc:
                 if (this->bosses[this->timelineInstr->arg0] != NULL &&

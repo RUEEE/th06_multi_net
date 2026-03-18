@@ -262,9 +262,13 @@ ZunResult ReplayManager::AddedCallback(ReplayManager *mgr)
     }
     mgr->replayData->stageReplayData[g_GameManager.currentStage - 1] = AllocateStageReplayData(sizeof(StageReplayData));
     stageReplayData = mgr->replayData->stageReplayData[g_GameManager.currentStage - 1];
-    stageReplayData->bombsRemaining = g_GameManager.bombsRemaining;
     stageReplayData->livesRemaining = g_GameManager.livesRemaining;
+    stageReplayData->bombsRemaining = g_GameManager.bombsRemaining;
     stageReplayData->power = g_GameManager.currentPower;
+    stageReplayData->livesRemaining2 = g_GameManager.livesRemaining2;
+    stageReplayData->bombsRemaining2 = g_GameManager.bombsRemaining2;
+    stageReplayData->power2 = g_GameManager.currentPower2;
+    
     stageReplayData->rank = g_GameManager.rank;
     stageReplayData->pointItemsCollected = g_GameManager.pointItemsCollected;
     stageReplayData->randomSeed = g_GameManager.randomSeed;
@@ -314,6 +318,10 @@ ZunResult ReplayManager::AddedCallbackDemo(ReplayManager *mgr)
     g_GameManager.livesRemaining = replayData->livesRemaining;
     g_GameManager.bombsRemaining = replayData->bombsRemaining;
     g_GameManager.currentPower = replayData->power;
+    g_GameManager.livesRemaining2 = replayData->livesRemaining2;
+    g_GameManager.bombsRemaining2 = replayData->bombsRemaining2;
+    g_GameManager.currentPower2 = replayData->power2;
+
     mgr->replayInputs = replayData->replayInputs;
     g_GameManager.powerItemCountForScore = replayData->powerItemCountForScore;
     if (2 <= g_GameManager.currentStage && mgr->replayData->stageReplayData[g_GameManager.currentStage - 2] != NULL)

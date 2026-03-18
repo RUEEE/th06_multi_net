@@ -113,8 +113,10 @@ struct GameManager
     u16 pointItemsCollected;
     u8 numRetries;
     i8 powerItemCountForScore;
+
     i8 livesRemaining;
     i8 bombsRemaining;
+
     i8 extraLives;
     u8 character;
     u8 character2;
@@ -147,6 +149,10 @@ struct GameManager
     i32 maxRank;
     i32 minRank;
     i32 subRank;
+
+    i8 livesRemaining2;
+    i8 bombsRemaining2;
+    u16 currentPower2;
 };
 ZUN_ASSERT_SIZE(GameManager, 0x1a80);
 }; // namespace th06

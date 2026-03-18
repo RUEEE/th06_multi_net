@@ -25,7 +25,6 @@ Host g_host;
 Guest g_guest;
 int g_delay = 1;
 bool g_is_host = false;
-bool g_is_host_p1 = true;
 bool g_is_connected = false;
 bool g_is_single_mode = false;
 

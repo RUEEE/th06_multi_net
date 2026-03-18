@@ -1010,15 +1010,22 @@ ChainCallbackResult MainMenu::OnUpdate(MainMenu *menu)
                 
                 g_GameManager.livesRemaining = g_Supervisor.cfg.lifeCount;
                 g_GameManager.bombsRemaining = g_Supervisor.cfg.bombCount;
+                g_GameManager.livesRemaining2 = g_Supervisor.cfg.lifeCount;
+                g_GameManager.bombsRemaining2 = g_Supervisor.cfg.bombCount;
+
                 if (g_GameManager.difficulty == EXTRA)
                 {
                     g_GameManager.livesRemaining = 2;
                     g_GameManager.bombsRemaining = 3;
+                    g_GameManager.livesRemaining2 = 2;
+                    g_GameManager.bombsRemaining2 = 3;
                 }
                 if(g_GameManager.isInPracticeMode)
                 {
                     g_GameManager.livesRemaining = 8;
                     g_GameManager.bombsRemaining = 8;
+                    g_GameManager.livesRemaining2 = 8;
+                    g_GameManager.bombsRemaining2 = 8;
                 }
                 g_Supervisor.curState = 2;
                 g_SoundPlayer.PlaySoundByIdx(SOUND_SELECT, 0);
@@ -1774,6 +1781,8 @@ i32 MainMenu::ReplayHandling()
             }
             g_GameManager.livesRemaining = this->currentReplay->stageReplayData[cur]->livesRemaining;
             g_GameManager.bombsRemaining = this->currentReplay->stageReplayData[cur]->bombsRemaining;
+            g_GameManager.livesRemaining2 = this->currentReplay->stageReplayData[cur]->livesRemaining2;
+            g_GameManager.bombsRemaining2 = this->currentReplay->stageReplayData[cur]->bombsRemaining2;
             ReplayData *uh = this->currentReplay;
             free(uh);
             this->currentReplay = NULL;

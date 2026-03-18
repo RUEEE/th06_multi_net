@@ -830,7 +830,7 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
 
                     local_98[0] += g_Rng.GetRandomF32InRange(144.0f) - 72.0f;
                     local_98[1] += g_Rng.GetRandomF32InRange(144.0f) - 72.0f;
-                    if (g_GameManager.currentPower < 128)
+                    if (g_GameManager.currentPower < 128 || g_GameManager.currentPower2 < 128)
                     {
                         g_ItemManager.SpawnItem(&local_98, local_8c == 0 ? ITEM_POWER_BIG : ITEM_POWER_SMALL, 0);
                     }

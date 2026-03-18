@@ -56,6 +56,14 @@ This project aims to make multiplayer from reconstructed source code of [Touhou 
 * After version 0.36, you can freely choose P1/P2 characters. If you want to change colors at this point, you need to unpack `TOLOL_CM.DAT`, then replace the following files: `player00b.png/player01b.png/player00b_a.png/player01b_a.png`.
 * The description files for these are stored in `player00b.anm` and `player01b.anm` respectively.
 
+### 3.7 Updates
+- MarisaB is capable to shoot when another player is bombing
+- ESC+R added
+- initial resource is changed to 2-3
+- resources for P1/P2 is calculated separately
+- automatically hide another player if too close
+- add more score bonus life (10,20,30,40,50,60,80,100,125,150,200,250M)
+
 ### 3.6.1 Updates
 - "P1 as host" is removed since P1/P2 character can be selected in game.
 - Code of timeout is changed to make it more stable.

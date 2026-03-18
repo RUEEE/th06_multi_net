@@ -39,7 +39,6 @@ extern Host g_host;
 extern Guest g_guest;
 extern int g_delay;
 extern bool g_is_host;
-extern bool g_is_host_p1;
 extern bool g_is_single_mode;
 extern bool g_restart_flag;
 

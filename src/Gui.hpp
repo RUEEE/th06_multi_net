@@ -118,6 +118,8 @@ struct GuiImpl
     GuiFormattedText bonusScore;
     GuiFormattedText fullPowerMode;
     GuiFormattedText spellCardBonus;
+    
+    GuiFormattedText fullPowerMode2;
 };
 ZUN_ASSERT_SIZE(GuiImpl, 0x2c44);
 struct GuiFlags
@@ -162,6 +164,7 @@ struct Gui
     ZunBool IsDialogueSkippable();
 
     void ShowFullPowerMode(i32 fmtArg);
+    void ShowFullPowerMode2(i32 fmtArg);
 
     void SetBossHealthBar(f32 val)
     {
