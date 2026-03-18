@@ -10,7 +10,6 @@
 #define IDC_STATIC_LATENCY       1006
 #define IDC_EDIT_TARGET_LATENCY  1007
 #define IDC_BTN_START_GAME       1008
-#define IDC_CHECKBOX_IS_HOST_1P  1009
 #define IDC_BTN_START_GAME_LOCAL 1010
 
 #define TIMER_ID_POLL            1
@@ -67,10 +66,6 @@ int ConnectionUI::GetDelay()
     return m_delay;
 }
 
-bool ConnectionUI::GetIsHostP1()
-{
-    return m_is_host_p1;
-}
 void ConnectionUI::SetDelay(int delay)
 {
     m_delay = delay;
@@ -85,13 +80,6 @@ void ConnectionUI::SetDelay(int delay)
     char chs[60];
     sprintf(chs,"%d",m_delay);
     SetWindowTextA(m_editTargetLatency,chs);
-    return;
-}
-
-void ConnectionUI::SetIsHostP1(bool is_host_p1)
-{
-    m_is_host_p1 = is_host_p1;
-    SendMessage(m_checkBoxIsHost1P, BM_SETCHECK, m_is_host_p1 ? BST_CHECKED : BST_UNCHECKED, 0);
     return;
 }
 
@@ -154,13 +142,15 @@ bool ConnectionUI::CreateMainWindow(HINSTANCE hInst)
     wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
 
     RegisterClassA(&wc);
+    char title[100];
+    sprintf(title,"Game Launcher [ver=%s]",MULTI_NET_VER_S);
 
     m_hWnd = CreateWindowA(
         "ConnectionUIClass",
-        "Game Launcher",
+        title,
         WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
         CW_USEDEFAULT, CW_USEDEFAULT,
-        430, 480,
+        430, 400,
         NULL, NULL, hInst, this);
 
     return (m_hWnd != NULL);
@@ -182,7 +172,6 @@ void ConnectionUI::SaveControls()
 
     GetWindowTextA(m_editTargetLatency, buf, 128);
     WritePrivateProfileStringA("Connection", "target_delay", buf, g_iniPath);
-    WritePrivateProfileStringA("Connection", "is_host_p1", GetIsHostP1()?"1":"0", g_iniPath);
 }
 
 void ConnectionUI::CreateControls(HWND hWnd)
@@ -191,13 +180,11 @@ void ConnectionUI::CreateControls(HWND hWnd)
     static char port_host[128];
     static char port_listen[128];
     static char target_delay[128];
-    static bool is_host_p1;
 
     GetPrivateProfileStringA("Connection", "ip", "::1", ip, sizeof(ip), g_iniPath);
     GetPrivateProfileStringA("Connection", "port_host", "3036", port_host, sizeof(port_host), g_iniPath);
     GetPrivateProfileStringA("Connection", "port_listen", "3036", port_listen, sizeof(port_listen), g_iniPath);
     GetPrivateProfileStringA("Connection", "target_delay", "2", target_delay, sizeof(target_delay), g_iniPath);
-    is_host_p1 = GetPrivateProfileIntA("Connection", "is_host_p1", 0, g_iniPath);
 
     CreateWindowA("STATIC", "Host IP:", WS_CHILD | WS_VISIBLE,
         20, 20, 80, 20, hWnd, NULL, NULL, NULL);
@@ -208,8 +195,6 @@ void ConnectionUI::CreateControls(HWND hWnd)
 
     CreateWindowA("STATIC", "Host Port:", WS_CHILD | WS_VISIBLE,
         20, 60, 80, 20, hWnd, NULL, NULL, NULL);
-
-    
 
     m_editHostPort = CreateWindowA("EDIT", port_host,
         WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL | ES_NUMBER,
@@ -246,17 +231,13 @@ void ConnectionUI::CreateControls(HWND hWnd)
         WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL | ES_NUMBER,
         110, 250, 100, 24, hWnd, (HMENU)IDC_EDIT_TARGET_LATENCY, NULL, NULL);
 
-    m_checkBoxIsHost1P = CreateWindowA("BUTTON", "Host is 1P",
-        WS_VISIBLE | WS_CHILD | BS_AUTOCHECKBOX, 
-        20, 310, 100, 24, hWnd, (HMENU)IDC_CHECKBOX_IS_HOST_1P, NULL, NULL);
-
     m_btnStartGame = CreateWindowA("BUTTON", "Start Game",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_DISABLED,
-        20, 340, 180, 36, hWnd, (HMENU)IDC_BTN_START_GAME, NULL, NULL);
+        20, 300, 160, 32, hWnd, (HMENU)IDC_BTN_START_GAME, NULL, NULL);
 
     m_btnStartGameLocal = CreateWindowA("BUTTON", "Start Game(local)",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        220, 340, 180, 36, hWnd, (HMENU)IDC_BTN_START_GAME_LOCAL, NULL, NULL);
+        220, 300, 160, 32, hWnd, (HMENU)IDC_BTN_START_GAME_LOCAL, NULL, NULL);
 
     m_delay = atoi(target_delay);
     if(m_delay<0)
@@ -269,12 +250,6 @@ void ConnectionUI::CreateControls(HWND hWnd)
         m_delay=max_delay;
         SetWindowTextA(m_editTargetLatency,max_delay_s);
     };
-
-    m_is_host_p1 = is_host_p1;
-    if(is_host_p1)
-    {
-        SendMessage(m_checkBoxIsHost1P, BM_SETCHECK, is_host_p1 ? BST_CHECKED : BST_UNCHECKED, 0);
-    }
 }
 
 bool ConnectionUI::IsGameStarted()
@@ -353,7 +328,6 @@ void ConnectionUI::SendPingAsHost(Control ctrl)
     CtrlPack cp;
     cp.ctrl_type = ctrl;
     cp.init_setting.delay = GetDelay();
-    cp.init_setting.is_host_p1 = GetIsHostP1();
     cp.init_setting.ver = MULTI_NET_VER;
 
     Pack p;
@@ -371,7 +345,6 @@ void ConnectionUI::SendPingAsGuest(Control ctrl)
     CtrlPack cp;
     cp.ctrl_type = ctrl;
     cp.init_setting.delay = GetDelay();
-    cp.init_setting.is_host_p1 = GetIsHostP1();
     cp.init_setting.ver = MULTI_NET_VER;
 
     Pack p;
@@ -427,7 +400,6 @@ void ConnectionUI::OnClickGuest()
     int hostPort = GetEditInt(m_editHostPort);
     int listenPort = GetEditInt(m_editListenPort);
     EnableWindow(m_editTargetLatency, FALSE);
-    EnableWindow(m_checkBoxIsHost1P, FALSE);
 
     if(listenPort==-1 || hostPort==-1)
         return;
@@ -571,7 +543,6 @@ void ConnectionUI::ProcessGuestNetwork()
                 DestroyWindow(m_hWnd);
             }else if(p.ctrl.ctrl_type==Ctrl_Set_InitSetting){
                 SetDelay(p.ctrl.init_setting.delay);
-                SetIsHostP1(p.ctrl.init_setting.is_host_p1);
             }
             
         }
@@ -710,17 +681,6 @@ LRESULT ConnectionUI::HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM l
                         TryPeriodicPing();
                 }
                 break;
-        case IDC_CHECKBOX_IS_HOST_1P:
-        {
-            if (HIWORD(wParam) == BN_CLICKED) {
-                LRESULT state = SendMessage((HWND)lParam, BM_GETCHECK, 0, 0);
-                m_is_host_p1 = (state == BST_CHECKED);
-                if(IsHost())
-                    TryPeriodicPing();
-            }
-
-            break;
-        }
         }
         break;
     }

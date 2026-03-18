@@ -19,7 +19,6 @@ extern Host g_host;
 extern Guest g_guest;
 extern int g_delay;
 extern bool g_is_host;
-extern bool g_is_host_p1;
 extern bool g_is_connected;
 bool g_is_sync = true;
 extern bool g_istry_to_reconnect;
@@ -595,6 +594,7 @@ u16 GetKeys(int frame,bool is_in_UI,int& out_ctrl)
     static bool inited = false;
     static LARGE_INTEGER freq;
     LARGE_INTEGER cur;
+    LARGE_INTEGER ping_key_time;
     LARGE_INTEGER max_wait_to_time;
     if(!inited) {
         inited=true;
@@ -602,6 +602,7 @@ u16 GetKeys(int frame,bool is_in_UI,int& out_ctrl)
     }
     QueryPerformanceCounter(&cur);
     max_wait_to_time.QuadPart = cur.QuadPart + freq.QuadPart*5.0; // 5.0s
+    ping_key_time.QuadPart = cur.QuadPart + freq.QuadPart*0.1; // 0.1s
     do{
         res = g_ctrl_bits_rcved.find(frame-g_delay);
         if(res != g_ctrl_bits_rcved.end())
@@ -612,6 +613,7 @@ u16 GetKeys(int frame,bool is_in_UI,int& out_ctrl)
             has_rcv_data = true;
             break;
         }else{
+            int n_transfer = 1;
             while(cur.QuadPart < max_wait_to_time.QuadPart){
                 if(Controller::RcvPacks())
                 {
@@ -620,6 +622,11 @@ u16 GetKeys(int frame,bool is_in_UI,int& out_ctrl)
                 }
                 Sleep(1);
                 QueryPerformanceCounter(&cur);
+                // send key to another player to avoid lock
+                if(cur.QuadPart > ping_key_time.QuadPart) {
+                    ping_key_time.QuadPart = cur.QuadPart + freq.QuadPart*0.1; // 0.1s
+                    Controller::SendKeys(frame);
+                }
             }
         }
     }while(cur.QuadPart < max_wait_to_time.QuadPart);
@@ -644,59 +651,29 @@ u16 GetKeys(int frame,bool is_in_UI,int& out_ctrl)
     u16 finres = 0;
     if(g_is_host)
     {
-        if(g_is_host_p1)
-        {
-            finres = self_key;
-            finres |= TH_ISDOWN(rcv_key,TH_BUTTON_LEFT ,TH_BUTTON_LEFT2 );
-            finres |= TH_ISDOWN(rcv_key,TH_BUTTON_RIGHT,TH_BUTTON_RIGHT2);
-            finres |= TH_ISDOWN(rcv_key,TH_BUTTON_UP   ,TH_BUTTON_UP2   );
-            finres |= TH_ISDOWN(rcv_key,TH_BUTTON_DOWN ,TH_BUTTON_DOWN2 );
-            finres |= TH_ISDOWN(rcv_key,TH_BUTTON_SHOOT,TH_BUTTON_SHOOT2);
-            finres |= TH_ISDOWN(rcv_key,TH_BUTTON_BOMB ,TH_BUTTON_BOMB2 );
-            finres |= TH_ISDOWN(rcv_key,TH_BUTTON_FOCUS,TH_BUTTON_FOCUS2);
+        finres = self_key;
+        finres |= TH_ISDOWN(rcv_key,TH_BUTTON_LEFT ,TH_BUTTON_LEFT2 );
+        finres |= TH_ISDOWN(rcv_key,TH_BUTTON_RIGHT,TH_BUTTON_RIGHT2);
+        finres |= TH_ISDOWN(rcv_key,TH_BUTTON_UP   ,TH_BUTTON_UP2   );
+        finres |= TH_ISDOWN(rcv_key,TH_BUTTON_DOWN ,TH_BUTTON_DOWN2 );
+        finres |= TH_ISDOWN(rcv_key,TH_BUTTON_SHOOT,TH_BUTTON_SHOOT2);
+        finres |= TH_ISDOWN(rcv_key,TH_BUTTON_BOMB ,TH_BUTTON_BOMB2 );
+        finres |= TH_ISDOWN(rcv_key,TH_BUTTON_FOCUS,TH_BUTTON_FOCUS2);
 
-            finres |= TH_ISDOWN(rcv_key,TH_BUTTON_MENU,TH_BUTTON_MENU);
-            finres |= TH_ISDOWN(rcv_key,TH_BUTTON_SKIP,TH_BUTTON_SKIP);
-        }else{
-            finres = rcv_key;
-            finres |= TH_ISDOWN(self_key,TH_BUTTON_LEFT ,TH_BUTTON_LEFT2 );
-            finres |= TH_ISDOWN(self_key,TH_BUTTON_RIGHT,TH_BUTTON_RIGHT2);
-            finres |= TH_ISDOWN(self_key,TH_BUTTON_UP   ,TH_BUTTON_UP2   );
-            finres |= TH_ISDOWN(self_key,TH_BUTTON_DOWN ,TH_BUTTON_DOWN2 );
-            finres |= TH_ISDOWN(self_key,TH_BUTTON_SHOOT,TH_BUTTON_SHOOT2);
-            finres |= TH_ISDOWN(self_key,TH_BUTTON_BOMB ,TH_BUTTON_BOMB2 );
-            finres |= TH_ISDOWN(self_key,TH_BUTTON_FOCUS,TH_BUTTON_FOCUS2);
-
-            finres |= TH_ISDOWN(self_key,TH_BUTTON_MENU,TH_BUTTON_MENU);
-            finres |= TH_ISDOWN(self_key,TH_BUTTON_SKIP,TH_BUTTON_SKIP);
-        }
+        finres |= TH_ISDOWN(rcv_key,TH_BUTTON_MENU,TH_BUTTON_MENU);
+        finres |= TH_ISDOWN(rcv_key,TH_BUTTON_SKIP,TH_BUTTON_SKIP);
     }else{
-        if(g_is_host_p1)
-        {
-            finres = rcv_key;
-            finres |= TH_ISDOWN(self_key,TH_BUTTON_LEFT ,TH_BUTTON_LEFT2 );
-            finres |= TH_ISDOWN(self_key,TH_BUTTON_RIGHT,TH_BUTTON_RIGHT2);
-            finres |= TH_ISDOWN(self_key,TH_BUTTON_UP   ,TH_BUTTON_UP2   );
-            finres |= TH_ISDOWN(self_key,TH_BUTTON_DOWN ,TH_BUTTON_DOWN2 );
-            finres |= TH_ISDOWN(self_key,TH_BUTTON_SHOOT,TH_BUTTON_SHOOT2);
-            finres |= TH_ISDOWN(self_key,TH_BUTTON_BOMB ,TH_BUTTON_BOMB2 );
-            finres |= TH_ISDOWN(self_key,TH_BUTTON_FOCUS,TH_BUTTON_FOCUS2);
+        finres = rcv_key;
+        finres |= TH_ISDOWN(self_key,TH_BUTTON_LEFT ,TH_BUTTON_LEFT2 );
+        finres |= TH_ISDOWN(self_key,TH_BUTTON_RIGHT,TH_BUTTON_RIGHT2);
+        finres |= TH_ISDOWN(self_key,TH_BUTTON_UP   ,TH_BUTTON_UP2   );
+        finres |= TH_ISDOWN(self_key,TH_BUTTON_DOWN ,TH_BUTTON_DOWN2 );
+        finres |= TH_ISDOWN(self_key,TH_BUTTON_SHOOT,TH_BUTTON_SHOOT2);
+        finres |= TH_ISDOWN(self_key,TH_BUTTON_BOMB ,TH_BUTTON_BOMB2 );
+        finres |= TH_ISDOWN(self_key,TH_BUTTON_FOCUS,TH_BUTTON_FOCUS2);
 
-            finres |= TH_ISDOWN(self_key,TH_BUTTON_MENU,TH_BUTTON_MENU);
-            finres |= TH_ISDOWN(self_key,TH_BUTTON_SKIP,TH_BUTTON_SKIP);
-        }else{
-            finres = self_key;
-            finres |= TH_ISDOWN(rcv_key,TH_BUTTON_LEFT ,TH_BUTTON_LEFT2 );
-            finres |= TH_ISDOWN(rcv_key,TH_BUTTON_RIGHT,TH_BUTTON_RIGHT2);
-            finres |= TH_ISDOWN(rcv_key,TH_BUTTON_UP   ,TH_BUTTON_UP2   );
-            finres |= TH_ISDOWN(rcv_key,TH_BUTTON_DOWN ,TH_BUTTON_DOWN2 );
-            finres |= TH_ISDOWN(rcv_key,TH_BUTTON_SHOOT,TH_BUTTON_SHOOT2);
-            finres |= TH_ISDOWN(rcv_key,TH_BUTTON_BOMB ,TH_BUTTON_BOMB2 );
-            finres |= TH_ISDOWN(rcv_key,TH_BUTTON_FOCUS,TH_BUTTON_FOCUS2);
-
-            finres |= TH_ISDOWN(rcv_key,TH_BUTTON_MENU,TH_BUTTON_MENU);
-            finres |= TH_ISDOWN(rcv_key,TH_BUTTON_SKIP,TH_BUTTON_SKIP);
-        }
+        finres |= TH_ISDOWN(self_key,TH_BUTTON_MENU,TH_BUTTON_MENU);
+        finres |= TH_ISDOWN(self_key,TH_BUTTON_SKIP,TH_BUTTON_SKIP);
     }
     return finres;
 }

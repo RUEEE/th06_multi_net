@@ -14,9 +14,7 @@ public:
 public:
     void Show();
     int GetDelay();
-    bool GetIsHostP1();
     void SetDelay(int delay);
-    void SetIsHostP1(bool is_host_p1);
 
     bool IsHost() const;
     bool IsGuest() const;
@@ -38,7 +36,6 @@ private:
     bool m_isHost;
     bool m_isGuest;
     int m_delay;
-    bool m_is_host_p1;
 
     bool m_connected;
     bool m_startGame;

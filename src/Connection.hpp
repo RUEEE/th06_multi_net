@@ -1,5 +1,6 @@
 #pragma once
-#define MULTI_NET_VER 3600
+#define MULTI_NET_VER 3610
+#define MULTI_NET_VER_S "3.6.1"
 
 #include <winsock2.h>
 #include <Ws2tcpip.h>
@@ -111,7 +112,6 @@ struct CtrlPack
         Bits<16> keys[KeyPackFrameNum];
         struct
         {
-            bool is_host_p1;
             int delay;
             int ver;
         }init_setting;

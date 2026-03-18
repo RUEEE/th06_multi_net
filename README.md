@@ -56,13 +56,16 @@ This project aims to make multiplayer from reconstructed source code of [Touhou 
 * After version 0.36, you can freely choose P1/P2 characters. If you want to change colors at this point, you need to unpack `TOLOL_CM.DAT`, then replace the following files: `player00b.png/player01b.png/player00b_a.png/player01b_a.png`.
 * The description files for these are stored in `player00b.anm` and `player01b.anm` respectively.
 
+### 3.6.1 Updates
+- "P1 as host" is removed since P1/P2 character can be selected in game.
+- Code of timeout is changed to make it more stable.
 
-### 0.36 Updates
+### 3.6 Updates
 
 - Added P1/P2 character selection and color swapping.
 
 
-### 0.35 Updates
+### 3.5 Updates
 
 - Added Esc+Q shortcut.
 - Pressing F2, F3, or F4 will randomly drop Life/Bomb/Power items on the screen.

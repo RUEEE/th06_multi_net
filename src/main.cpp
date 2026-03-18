@@ -25,7 +25,7 @@ Host g_host;
 Guest g_guest;
 int g_delay = 1;
 bool g_is_host = false;
-bool g_is_host_p1 = false;
+bool g_is_host_p1 = true;
 bool g_is_connected = false;
 bool g_is_single_mode = false;
 
@@ -42,7 +42,6 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
     ui.Show();
     g_delay = ui.GetDelay();
     g_is_host = ui.IsHost();
-    g_is_host_p1 = ui.GetIsHostP1();
     if(!ui.IsGameStarted())
         return 1;
     if(!ui.IsConnected())
