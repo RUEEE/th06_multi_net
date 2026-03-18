@@ -53,8 +53,13 @@ This project aims to make multiplayer from reconstructed source code of [Touhou 
 
 
 ### P2 Color Swapping
-* After version 0.36, you can freely choose P1/P2 characters. If you want to change colors at this point, you need to unpack `TOLOL_CM.DAT`, then replace the following files: `player00b.png/player01b.png/player00b_a.png/player01b_a.png`.
+* After version 3.6, you can freely choose P1/P2 characters. If you want to change colors at this point, you need to unpack `TOLOL_CM.DAT`, then replace the following files: `player00b.png/player01b.png/player00b_a.png/player01b_a.png`.
 * The description files for these are stored in `player00b.anm` and `player01b.anm` respectively.
+* hitbox is added in 3.7.1, if want to change, unpack `TOTOL_CM.dat`，including `hitbox.png`,`hitbox_a.png`,`mod_anm.anm`'.
+
+### 3.7.1 Updates
+- hitbox when focusing
+- fix a 0.5px texture offset
 
 ### 3.7 Updates
 - MarisaB is capable to shoot when another player is bombing

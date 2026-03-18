@@ -249,6 +249,11 @@ struct Player
     ChainElem *chainCalc;
     ChainElem *chainDraw1;
     ChainElem *chainDraw2;
+
+    
+    AnmVm hitboxSprite;
+    int hitboxTime;
+
 #pragma var_order(x, y)
     void inline SetToTopLeftPos(AnmVm *sprite)
     {

@@ -751,13 +751,13 @@ ZunResult AnmManager::Draw(AnmVm *vm)
     yOffset = rintf(vm->pos.y);
     spriteXCenter = rintf((vm->sprite->widthPx * vm->scaleX) / 2.0f);
     spriteYCenter = rintf((vm->sprite->heightPx * vm->scaleY) / 2.0f);
-    this->TranslateRotation(&g_PrimitivesToDrawVertexBuf[0], -spriteXCenter - 0.5f, -spriteYCenter - 0.5f, zSine,
+    this->TranslateRotation(&g_PrimitivesToDrawVertexBuf[0], -spriteXCenter - 0.0f, -spriteYCenter - 0.0f, zSine,
                             zCosine, xOffset, yOffset);
-    this->TranslateRotation(&g_PrimitivesToDrawVertexBuf[1], spriteXCenter - 0.5f, -spriteYCenter - 0.5f, zSine,
+    this->TranslateRotation(&g_PrimitivesToDrawVertexBuf[1], spriteXCenter - 0.0f, -spriteYCenter - 0.0f, zSine,
                             zCosine, xOffset, yOffset);
-    this->TranslateRotation(&g_PrimitivesToDrawVertexBuf[2], -spriteXCenter - 0.5f, spriteYCenter - 0.5f, zSine,
+    this->TranslateRotation(&g_PrimitivesToDrawVertexBuf[2], -spriteXCenter - 0.0f, spriteYCenter - 0.0f, zSine,
                             zCosine, xOffset, yOffset);
-    this->TranslateRotation(&g_PrimitivesToDrawVertexBuf[3], spriteXCenter - 0.5f, spriteYCenter - 0.5f, zSine, zCosine,
+    this->TranslateRotation(&g_PrimitivesToDrawVertexBuf[3], spriteXCenter - 0.0f, spriteYCenter - 0.0f, zSine, zCosine,
                             xOffset, yOffset);
     g_PrimitivesToDrawVertexBuf[0].position.z = g_PrimitivesToDrawVertexBuf[1].position.z =
         g_PrimitivesToDrawVertexBuf[2].position.z = g_PrimitivesToDrawVertexBuf[3].position.z = vm->pos.z;

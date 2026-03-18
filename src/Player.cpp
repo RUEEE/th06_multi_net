@@ -25,6 +25,21 @@ extern bool g_is_single_mode;
 
 namespace th06
 {
+float MInterpolation(float t, float a, float b)
+{
+    if (t < 0.0f) {
+        return a;
+    } else if (t < 0.5) {
+        float k = (b - a) * 2.0f;
+        return k * t * t + a;
+    } else if (t < 1.0f) {
+        float k = (b - a) * 2.0f;
+        t = t - 1.0f;
+        return -k * t * t + b;
+    }
+    return b;
+}
+
 DIFFABLE_STATIC(Player, g_Player2);
 DIFFABLE_STATIC(Player, g_Player);
 
@@ -111,6 +126,14 @@ ZunResult Player::AddedCallback(Player *p)
     PlayerBullet *curBullet;
     i32 idx;
 
+    if ((i32)(g_Supervisor.curState != SUPERVISOR_STATE_GAMEMANAGER_REINIT) &&
+                g_AnmManager->LoadAnm(ANM_FILE_MOD_ANM, "data/mod_anm.anm", ANM_OFFSET_MOD_ANM) != ZUN_SUCCESS)
+    {
+        return ZUN_ERROR;
+    }
+    g_AnmManager->SetAndExecuteScriptIdx(&p->hitboxSprite, ANM_SCRIPT_HITBOX);
+
+    
     if (p->playerType == 1)
     {
         switch (g_GameManager.character)
@@ -507,7 +530,15 @@ ChainCallbackResult Player::OnUpdate(Player *p)
             }
         } 
     }
-    
+    // hitbox time
+    {
+        if(p->isFocus)
+        {
+            p->hitboxTime++;
+        }else{
+            p->hitboxTime=0;
+        }
+    }
 
 
     return CHAIN_CALLBACK_RESULT_CONTINUE;
@@ -789,9 +820,67 @@ ChainCallbackResult Player::OnDrawHighPrio(Player *p)
     p->playerSprite.pos.x = g_GameManager.arcadeRegionTopLeftPos.x + p->positionCenter.x;
     p->playerSprite.pos.y = g_GameManager.arcadeRegionTopLeftPos.y + p->positionCenter.y;
     p->playerSprite.pos.z = 0.49;
+
+    
+
     if (!g_GameManager.isInRetryMenu)
     {
         g_AnmManager->DrawNoRotation(&p->playerSprite);
+        
+        if(p->hitboxTime!=0){
+            float hitboxScale1;
+            float hitboxScale2;
+            float hitboxAngle1;
+            float hitboxAngle2;
+            int hitboxAlpha;
+
+            hitboxScale1 = MInterpolation(p->hitboxTime / 18.0f, 1.5f, 1.0f),
+            hitboxScale2 = MInterpolation(p->hitboxTime / 12.0f, 0.3f, 1.0f),
+            hitboxAlpha = (p->hitboxTime < 6.0f ? p->hitboxTime / 6.0f : 1.0f)*255;
+            if( hitboxAlpha>255) 
+                hitboxAlpha=255;
+                if (p->hitboxTime < 18.0f) {
+                hitboxAngle1 = MInterpolation(p->hitboxTime / 18.0f, 3.14159f, -3.14159f);
+                hitboxAngle2 = -hitboxAngle1;
+            } else {
+                hitboxAngle1 = -3.14159f + p->hitboxTime * 0.05235988f;
+                hitboxAngle2 = 3.14159f - p->hitboxTime * 0.05235988f;
+            }
+            p->hitboxSprite.pos.x = g_GameManager.arcadeRegionTopLeftPos.x + p->positionCenter.x;
+            p->hitboxSprite.pos.y = g_GameManager.arcadeRegionTopLeftPos.y + p->positionCenter.y;
+            p->hitboxSprite.pos.z = 0.49;
+            p->hitboxSprite.color = COLOR_SET_ALPHA(p->hitboxSprite.color ,hitboxAlpha);
+
+            if(!g_is_single_mode){
+                Player* another = g_is_host ? (&g_Player2) : (&g_Player);
+                Player* cur = g_is_host ? (&g_Player) : (&g_Player2);
+                if(p == another)
+                {
+                    float dx = another->positionCenter.x - cur->positionCenter.x;
+                    float dy = another->positionCenter.y - cur->positionCenter.y;
+                    float dist = sqrtf(dx*dx+dy*dy);
+                    if(dist < 50.0f)
+                        dist = 50.0f;
+                    if(dist<100.0f) {
+                        int alpha = ((dist-50.0f)/50.0f)*220+35;
+                        if(alpha>255) alpha=255;
+                        if(alpha<0) alpha=0;
+                        if(alpha < p->hitboxSprite.color >> 24)
+                            p->playerSprite.color = COLOR_SET_ALPHA(p->hitboxSprite.color, alpha);
+                    }
+                } 
+            }
+
+            p->hitboxSprite.rotation.z = hitboxAngle1;
+            p->hitboxSprite.scaleX = p->hitboxSprite.scaleY = hitboxScale1;
+           
+            g_AnmManager->Draw(&p->hitboxSprite);
+            p->hitboxSprite.rotation.z = hitboxAngle2;
+            p->hitboxSprite.scaleX = p->hitboxSprite.scaleY = hitboxScale2;
+            g_AnmManager->Draw(&p->hitboxSprite);
+        }
+        
+
         if (p->orbState != ORB_HIDDEN &&
             (p->playerState == PLAYER_STATE_ALIVE || p->playerState == PLAYER_STATE_INVULNERABLE))
         {
