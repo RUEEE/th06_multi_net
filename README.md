@@ -45,6 +45,26 @@ This project aims to make multiplayer from reconstructed source code of [Touhou 
 * **Note:** A higher target delay can better tolerate network latency, but the input lag for controls will also increase.
 * Click **start game** to begin.
 
+### KeyBind
+* Set in *mod_config.ini*, available keys are:
+
+|  |  |  |  |  |  |  |  |  |  |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| key_1 | key_2 | key_3 | key_4 | key_5 | key_6 | key_7 | key_8 | key_9 | key_0 |
+| minus | equals | backspace | tab | key_Q | key_W | key_E | key_R | key_T | key_Y |
+| key_U | key_I | key_O | key_P | lbracket | rbracket | enter | lcontrol | key_A | key_S |
+| key_D | key_F | key_G | key_H | key_J | key_K | key_L | semicolon | apostrophe | grave |
+| lshift | backslash | key_Z | key_X | key_C | key_V | key_B | key_N | key_M | comma |
+| period | slash | rshift | multiply | lmenu | space | numpad_7 | numpad_8 | numpad_9 | subtract |
+| numpad_4 | numpad_5 | numpad_6 | add | numpad_1 | numpad_2 | numpad_3 | numpad_0 | numpad_enter | rcontrol |
+| divide | rmenu | home | up | prior | left | right | end | down | insert |
+| delete | - | - | - | - | - | - | - | - | - |
+
+### Some Difference
+* Score rewards (extend thresholds) : 10, 20, 40, 60, 100, 150, 200, 250M.
+* When one is not shooting and overlaps with the other, holding the Focus button for 1.5s will transfer a life to the other player.
+* The feature when one player has no life and died: The game will not end. The player dying will give an 1up item, and then enter spirit mode. If another player is focused without shooting on that spirit mode player for 1.5s, then that player can resurrection from spirit with 1 life cost. The game will end if both players is died and in spirit mode.
+* Insane mode: turn on by Press F6, which will make rank lock at 64.
 
 ### Troubleshooting and Additional Notes
 * **Reconnection:** If the connection drops in-game, there is a 5-second timeout. If it doesn't reconnect within this time, you can try returning to the main menu (at the Reimu head screen) to reconnect (though this may not always work).
@@ -67,6 +87,10 @@ This project aims to make multiplayer from reconstructed source code of [Touhou 
 - Add an insane mode, turn on by Press F6, which will make rank lock at 64.
 - Fix the hitbox alpha when players are too close.
 - Add re-connect hotkey: F8. Both host and guest need to press that key to try to reconnect. Notice that host/guest need to be in the same menu/UI.
+
+## 3.9.5
+- Add keybind option.
+- Add SE for players move close to each other.
 
 ## 3.8 Updates
 - Adjusted score rewards (extend thresholds) to be more balanced (10, 20, 40, 60, 100, 150, 200, 250M).

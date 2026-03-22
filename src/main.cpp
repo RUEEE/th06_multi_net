@@ -18,7 +18,7 @@
 #include "ZunResult.hpp"
 #include "i18n.hpp"
 #include "utils.hpp"
-
+#include "Controller.hpp"
 using namespace th06;
 
 Host g_host;
@@ -27,6 +27,9 @@ int g_delay = 1;
 bool g_is_host = false;
 bool g_is_connected = false;
 bool g_is_single_mode = false;
+
+extern THKeysDefine thkeysDefine;
+const char* g_iniPath = ".\\mod_config.ini";
 
 #pragma var_order(renderResult, testCoopLevelRes, msg, testResetRes, waste1, waste2, waste3, waste4, waste5, waste6)
 int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
@@ -51,6 +54,43 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
         g_is_connected = true;
         g_is_single_mode = false;
     }
+    // th keys settings
+    {
+        InitKeyBindDefine();
+        char ch_key[100];
+#define KeyFromProfile(name,default_key,bind) GetPrivateProfileStringA("KeyBind", name, default_key, ch_key, sizeof(ch_key), g_iniPath); \
+    bind = GetKeyDefine(ch_key,GetKeyDefine(default_key,KeyDefine()));\
+    WritePrivateProfileStringA("KeyBind", name, bind.keyname.c_str(), g_iniPath);
+
+        KeyFromProfile("Shoot_1P","key_Z" ,thkeysDefine.key_1P_shoot);
+        KeyFromProfile( "Bomb_1P","key_X" ,thkeysDefine.key_1P_bomb);
+        KeyFromProfile("Focus_1P","lshift",thkeysDefine.key_1P_focus);
+        KeyFromProfile(   "Up_1P","up"    ,thkeysDefine.key_1P_up);
+        KeyFromProfile( "Down_1P","down"  ,thkeysDefine.key_1P_down);
+        KeyFromProfile( "Left_1P","left"  ,thkeysDefine.key_1P_left);
+        KeyFromProfile("Right_1P","right" ,thkeysDefine.key_1P_right);
+
+        
+        KeyFromProfile("Shoot_2P","key_F"  ,thkeysDefine.key_2P_shoot);
+        KeyFromProfile( "Bomb_2P","key_G"  ,thkeysDefine.key_2P_bomb);
+        KeyFromProfile("Focus_2P","key_D"  ,thkeysDefine.key_2P_focus);
+        KeyFromProfile(   "Up_2P","key_I"  ,thkeysDefine.key_2P_up);
+        KeyFromProfile( "Down_2P","key_K"  ,thkeysDefine.key_2P_down);
+        KeyFromProfile( "Left_2P","key_J"  ,thkeysDefine.key_2P_left);
+        KeyFromProfile("Right_2P","key_L"  ,thkeysDefine.key_2P_right);
+        
+        KeyFromProfile( "Control"   ,"lcontrol"  ,thkeysDefine.key_ctrl);
+        KeyFromProfile( "QuickQuit" ,"key_Q"     ,thkeysDefine.key_Q);
+        KeyFromProfile( "QuickRetry","key_R"     ,thkeysDefine.key_R);
+        
+        KeyFromProfile( "AddDelay" ,"key_M"     ,thkeysDefine.key_M);
+        KeyFromProfile( "DecDelay" ,"key_N"     ,thkeysDefine.key_N);
+        thkeysDefine.key_esc.dik=DIK_ESCAPE;
+        thkeysDefine.key_esc.vk=VK_ESCAPE;
+#undef KeyFromProfile
+    }
+    
+
     //g_is_connected = false;
 
     //if (utils::CheckForRunningGameInstance())

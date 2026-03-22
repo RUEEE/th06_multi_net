@@ -156,8 +156,7 @@ bool ConnectionUI::CreateMainWindow(HINSTANCE hInst)
     return (m_hWnd != NULL);
 }
 
-const char* g_iniPath = ".\\connect_config.ini";
-
+extern const char* g_iniPath;
 void ConnectionUI::SaveControls()
 {
     char buf[128];

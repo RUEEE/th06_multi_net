@@ -1,9 +1,51 @@
 #pragma once
 
 #include "inttypes.hpp"
+#include <string>
+
+
+struct KeyDefine {
+    u16 dik;
+    u16 vk;
+    std::string keyname;
+    bool operator==(const KeyDefine& k2)const
+    {
+        return dik == k2.dik && vk == k2.vk && keyname == k2.keyname;
+    }
+    };
+extern KeyDefine keyBindDefine[109];
+struct THKeysDefine{
+    KeyDefine key_1P_shoot;
+    KeyDefine key_1P_bomb;
+    KeyDefine key_1P_focus;
+    KeyDefine key_1P_up;
+    KeyDefine key_1P_down;
+    KeyDefine key_1P_left;
+    KeyDefine key_1P_right;
+
+    KeyDefine key_2P_shoot;
+    KeyDefine key_2P_bomb;
+    KeyDefine key_2P_focus;
+    KeyDefine key_2P_up;
+    KeyDefine key_2P_down;
+    KeyDefine key_2P_left;
+    KeyDefine key_2P_right;
+
+    KeyDefine key_ctrl;
+    KeyDefine key_esc;
+    KeyDefine key_Q;
+    KeyDefine key_R;
+
+    KeyDefine key_M;
+    KeyDefine key_N;
+};
+void InitKeyBindDefine();
+KeyDefine GetKeyDefine(std::string keyname,KeyDefine default_key);
+KeyDefine GetKeyDefine(int vk,KeyDefine default_key);
 
 namespace th06
 {
+
 enum TouhouButton
 {
     TH_BUTTON_SHOOT = 1 << 0,
